@@ -1,11 +1,3 @@
-//
-//  CalendarView.swift
-//  ToDo
-//
-//  Created by Avi Sharma on 11/6/24.
-//
-
-
 import SwiftUI
 
 struct CalendarView: View {
@@ -14,12 +6,10 @@ struct CalendarView: View {
     var body: some View {
         NavigationView {
             VStack {
-                // Calendar view (simple date picker for now)
                 DatePicker("Select a day", selection: $selectedDate, displayedComponents: .date)
                     .datePickerStyle(GraphicalDatePickerStyle())
                     .padding()
 
-                // Navigate to tasks for selected day
                 NavigationLink(destination: DayDetailView(day: selectedDate)) {
                     Text("Go to Tasks for \(formattedDate(selectedDate))")
                         .padding()

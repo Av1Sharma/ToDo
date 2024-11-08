@@ -5,31 +5,26 @@ struct DayDetailView: View {
     @StateObject private var taskManager = TaskManager()
     @State private var showAddTask = false
 
-    // Calculate the start of the week for the given day once and reuse it
     private var weekStart: Date {
         taskManager.startOfWeek(for: day)
     }
 
     var body: some View {
         VStack {
-            // Progress bar
             let tasksForToday = taskManager.tasksForWeek[weekStart] ?? []
             let progress = tasksForToday.isEmpty ? 0.0 : Double(tasksForToday.filter { $0.isCompleted }.count) / Double(tasksForToday.count)
             ProgressView(value: progress, total: 1)
                 .progressViewStyle(LinearProgressViewStyle())
                 .padding()
 
-            // Task list
             List {
-                // Binding to the array of tasks
                 ForEach(Array(tasksForToday.enumerated()), id: \.offset) { index, task in
                     HStack {
-                        // Task completion button with animation
                         Button(action: {
                             withAnimation {
-                                taskManager.tasksForWeek[weekStart]?[index].isCompleted.toggle() // Toggle completion
+                                taskManager.tasksForWeek[weekStart]?[index].isCompleted.toggle()
                             }
-                            taskManager.saveTasks(for: weekStart) // Save changes
+                            taskManager.saveTasks(for: weekStart)
                         }) {
                             Image(systemName: task.isCompleted ? "checkmark.square.fill" : "square")
                                 .foregroundColor(task.isCompleted ? .green : .blue)
@@ -38,14 +33,23 @@ struct DayDetailView: View {
                         Text(task.name)
                             .strikethrough(task.isCompleted, color: .black)
                             .foregroundColor(task.isCompleted ? .gray : .black)
+                        
+                        if let color = task.color {
+                            Circle()
+                                .fill(color)
+                                .frame(width: 10, height: 10)
+                        }
+                        
+                        if let dueDate = task.dueDate {
+                            Text("Due: \(formattedDate(dueDate))")
+                                .font(.subheadline)
+                                .foregroundColor(.red)
+                        }
                     }
                 }
             }
 
-            // Add task button
-            Button(action: {
-                showAddTask.toggle()
-            }) {
+            Button(action: { showAddTask.toggle() }) {
                 Image(systemName: "plus.circle.fill")
                     .font(.system(size: 40))
                     .foregroundColor(.blue)
@@ -58,16 +62,16 @@ struct DayDetailView: View {
                         set: { taskManager.tasksForWeek[weekStart] = $0 }
                     ),
                     onDismiss: {
-                        taskManager.saveTasks(for: weekStart) // Save tasks when returning from AddTaskView
+                        taskManager.saveTasks(for: weekStart)
                     }
                 )
             }
         }
         .onAppear {
-            taskManager.loadTasks(for: weekStart) // Load tasks for the current week
+            taskManager.loadTasks(for: weekStart)
         }
         .onDisappear {
-            taskManager.saveTasks(for: weekStart) // Save tasks when leaving the view
+            taskManager.saveTasks(for: weekStart)
         }
         .navigationBarTitle(Text("Tasks for \(formattedDate(day))"), displayMode: .inline)
     }
