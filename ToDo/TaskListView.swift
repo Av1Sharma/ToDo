@@ -1,19 +1,15 @@
 import SwiftUI
 
-struct DayDetailView: View {
-    var day: Date
+struct TaskListView: View {
     @ObservedObject var taskManager = TaskManager()
     @State private var showAddTask = false
-
-    private var weekStart: Date {
-        taskManager.startOfWeek(for: day)
-    }
+    @State private var selectedDate = Date()
 
     var body: some View {
         VStack {
             // Task List View
             List {
-                ForEach(taskManager.tasksForWeek[weekStart] ?? [], id: \.id) { task in
+                ForEach(taskManager.tasksForWeek[selectedDate] ?? [], id: \.id) { task in
                     HStack {
                         Button(action: {
                             toggleTaskCompletion(task)
@@ -28,7 +24,7 @@ struct DayDetailView: View {
                     }
                 }
             }
-            
+
             Button(action: {
                 showAddTask.toggle()
             }) {
@@ -38,23 +34,30 @@ struct DayDetailView: View {
             }
             .padding()
             .sheet(isPresented: $showAddTask) {
-                AddTaskView(tasks: Binding(get: { taskManager.tasksForWeek[weekStart] ?? [] }, set: { taskManager.tasksForWeek[weekStart] = $0 }), onDismiss: {
-                    taskManager.saveTasks(for: weekStart)
-                })
+                // Pass a Binding<[Task]> to the AddTaskView
+                AddTaskView(
+                    tasks: Binding(
+                        get: { taskManager.tasksForWeek[selectedDate] ?? [] },
+                        set: { taskManager.tasksForWeek[selectedDate] = $0 }
+                    ),
+                    onDismiss: {
+                        taskManager.saveTasks(for: selectedDate) // Save tasks when the sheet is dismissed
+                    }
+                )
             }
         }
         .onAppear {
-            taskManager.loadTasks(for: weekStart)
+            taskManager.loadTasks(for: selectedDate)
         }
         .onDisappear {
-            taskManager.saveTasks(for: weekStart)
+            taskManager.saveTasks(for: selectedDate)
         }
     }
 
     private func toggleTaskCompletion(_ task: Task) {
-        if let index = taskManager.tasksForWeek[weekStart]?.firstIndex(where: { $0.id == task.id }) {
-            taskManager.tasksForWeek[weekStart]?[index].isCompleted.toggle()
-            taskManager.saveTasks(for: weekStart)
+        if let index = taskManager.tasksForWeek[selectedDate]?.firstIndex(where: { $0.id == task.id }) {
+            taskManager.tasksForWeek[selectedDate]?[index].isCompleted.toggle()
+            taskManager.saveTasks(for: selectedDate)
         }
     }
 }
