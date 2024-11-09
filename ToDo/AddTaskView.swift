@@ -3,7 +3,7 @@ import SwiftUI
 struct AddTaskView: View {
     @Binding var tasks: [Task]
     @State private var taskName = ""
-    @State private var dueDate: Date = Date()
+    @State private var dueDate: Date? = nil
     @State private var isHighPriority = false
     @State private var taskColor: Color = .blue
     @Environment(\.presentationMode) var presentationMode
@@ -16,24 +16,25 @@ struct AddTaskView: View {
                 .padding()
                 .textFieldStyle(RoundedBorderTextFieldStyle())
 
-            DatePicker("Due Date", selection: $dueDate, displayedComponents: .date)
-                .padding()
+            // Use a default value if dueDate is nil
+            DatePicker("Due Date", selection: Binding(
+                get: { dueDate ?? Date() }, // Provide a default value if nil
+                set: { dueDate = $0 }         // Update the dueDate when changed
+            ), displayedComponents: .date)
+            .padding()
 
             Toggle("High Priority", isOn: $isHighPriority)
                 .padding()
 
-            ColorPicker("Select Color", selection: $taskColor)
+            ColorPicker("Pick a color", selection: $taskColor)
                 .padding()
 
             Button("Add Task") {
                 let newTask = Task(name: taskName, dueDate: dueDate, isHighPriority: isHighPriority, color: taskColor)
                 tasks.append(newTask)
-                taskName = ""
-                dueDate = Date()
-                isHighPriority = false
-                taskColor = .blue
-                onDismiss()
-                presentationMode.wrappedValue.dismiss()
+                taskName = "" // Reset the text field
+                onDismiss() // Save tasks
+                presentationMode.wrappedValue.dismiss() // Dismiss the sheet
             }
             .padding()
             .disabled(taskName.isEmpty)

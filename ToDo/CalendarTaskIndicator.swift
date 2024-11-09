@@ -8,14 +8,15 @@ struct CalendarTaskIndicator: View {
         VStack {
             if let taskForSelectedDate = tasks.first(where: { Calendar.current.isDate($0.dueDate ?? Date(), inSameDayAs: date) }) {
                 HStack {
-                    // Use the correct method `taskColor()` to get the task color
                     Circle()
-                        .fill(taskForSelectedDate.taskColor()) // Fixed method name here
-                        .frame(width: 20, height: 20)
+                        .fill(taskForSelectedDate.taskColor()) // Use task color for the dot
+                        .frame(width: 5, height: 5)
                     Text("Due: \(taskForSelectedDate.name)")
+                        .font(.footnote)
                 }
             } else {
                 Text("No tasks due on this date.")
+                    .font(.footnote)
             }
         }
     }

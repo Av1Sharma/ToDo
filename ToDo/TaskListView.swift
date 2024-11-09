@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct TaskListView: View {
-    @ObservedObject var taskManager = TaskManager()
+    @ObservedObject var taskManager: TaskManager
     @State private var showAddTask = false
     @State private var selectedDate = Date()
 

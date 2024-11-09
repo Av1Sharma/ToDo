@@ -1,17 +1,19 @@
+import SwiftUICore
 import SwiftUI
+import Foundation
 
 struct DayDetailView: View {
     var day: Date
-    @ObservedObject var taskManager = TaskManager()
+    @ObservedObject var taskManager: TaskManager
     @State private var showAddTask = false
 
     private var weekStart: Date {
-        taskManager.startOfWeek(for: day)
+        // Move this calculation to TaskManager class
+        Calendar.current.date(from: Calendar.current.dateComponents([.yearForWeekOfYear, .weekOfYear], from: day)) ?? day
     }
 
     var body: some View {
         VStack {
-            // Task List View
             List {
                 ForEach(taskManager.tasksForWeek[weekStart] ?? [], id: \.id) { task in
                     HStack {
@@ -38,9 +40,17 @@ struct DayDetailView: View {
             }
             .padding()
             .sheet(isPresented: $showAddTask) {
-                AddTaskView(tasks: Binding(get: { taskManager.tasksForWeek[weekStart] ?? [] }, set: { taskManager.tasksForWeek[weekStart] = $0 }), onDismiss: {
-                    taskManager.saveTasks(for: weekStart)
-                })
+                AddTaskView(
+                    tasks: Binding(
+                        get: { taskManager.tasksForWeek[weekStart] ?? [] },
+                        set: { tasks in
+                            taskManager.tasksForWeek[weekStart] = tasks
+                        }
+                    ),
+                    onDismiss: {
+                        taskManager.saveTasks(for: weekStart)
+                    }
+                )
             }
         }
         .onAppear {
@@ -52,8 +62,10 @@ struct DayDetailView: View {
     }
 
     private func toggleTaskCompletion(_ task: Task) {
-        if let index = taskManager.tasksForWeek[weekStart]?.firstIndex(where: { $0.id == task.id }) {
-            taskManager.tasksForWeek[weekStart]?[index].isCompleted.toggle()
+        if var tasks = taskManager.tasksForWeek[weekStart],
+           let index = tasks.firstIndex(where: { $0.id == task.id }) {
+            tasks[index].isCompleted.toggle()
+            taskManager.tasksForWeek[weekStart] = tasks
             taskManager.saveTasks(for: weekStart)
         }
     }

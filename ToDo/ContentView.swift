@@ -1,10 +1,12 @@
 import SwiftUI
 
 struct ContentView: View {
+    @StateObject private var taskManager = TaskManager()
+    
     var body: some View {
         NavigationView {
             VStack {
-                NavigationLink(destination: CalendarView()) {
+                NavigationLink(destination: CalendarView(taskManager: taskManager)) {
                     Text("Calendar View")
                         .font(.title)
                         .padding()
@@ -13,7 +15,7 @@ struct ContentView: View {
                         .cornerRadius(10)
                 }
 
-                NavigationLink(destination: TaskListView()) {
+                NavigationLink(destination: TaskListView(taskManager: taskManager)) {
                     Text("Task List View")
                         .font(.title)
                         .padding()
