@@ -2,8 +2,9 @@
 //  ToDoApp.swift
 //  ToDo
 //
-//  Created by Avi Sharma on 11/6/24.
+//  Created by Avi Sharma on 11/26/24.
 //
+
 
 import SwiftUI
 
@@ -11,7 +12,7 @@ import SwiftUI
 struct ToDoApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            TaskListView()
         }
     }
 }

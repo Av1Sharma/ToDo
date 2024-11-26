@@ -1,63 +1,52 @@
+//
+//  TaskListView.swift
+//  ToDo
+//
+//  Created by Avi Sharma on 11/26/24.
+//
+
+
 import SwiftUI
 
 struct TaskListView: View {
-    @ObservedObject var taskManager: TaskManager
-    @State private var showAddTask = false
-    @State private var selectedDate = Date()
-
+    @StateObject private var taskManager = TaskManager()
+    @State private var showTaskForm = false
+    
     var body: some View {
-        VStack {
-            // Task List View
+        NavigationView {
             List {
-                ForEach(taskManager.tasksForWeek[selectedDate] ?? [], id: \.id) { task in
-                    HStack {
-                        Button(action: {
-                            toggleTaskCompletion(task)
-                        }) {
-                            Image(systemName: task.isCompleted ? "checkmark.square.fill" : "square")
-                                .foregroundColor(task.isCompleted ? .green : .blue)
+                ForEach(taskManager.tasks) { task in
+                    if !task.isCompleted {
+                        NavigationLink(destination: TaskDetailView(task: task, taskManager: taskManager)) {
+                            HStack {
+                                Text(task.name)
+                                Spacer()
+                                ProgressView(value: task.progress)
+                                    .frame(width: 100)
+                            }
                         }
-                        
-                        Text(task.name)
-                            .strikethrough(task.isCompleted, color: .black)
-                            .foregroundColor(task.isCompleted ? .gray : .black)
+                    }
+                }
+                .onDelete(perform: deleteTask)
+            }
+            .navigationTitle("To-Do List")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: { showTaskForm.toggle() }) {
+                        Image(systemName: "plus")
                     }
                 }
             }
-
-            Button(action: {
-                showAddTask.toggle()
-            }) {
-                Image(systemName: "plus.circle.fill")
-                    .font(.system(size: 40))
-                    .foregroundColor(.blue)
+            .sheet(isPresented: $showTaskForm) {
+                AddTaskView(taskManager: taskManager)
             }
-            .padding()
-            .sheet(isPresented: $showAddTask) {
-                // Pass a Binding<[Task]> to the AddTaskView
-                AddTaskView(
-                    tasks: Binding(
-                        get: { taskManager.tasksForWeek[selectedDate] ?? [] },
-                        set: { taskManager.tasksForWeek[selectedDate] = $0 }
-                    ),
-                    onDismiss: {
-                        taskManager.saveTasks(for: selectedDate) // Save tasks when the sheet is dismissed
-                    }
-                )
-            }
-        }
-        .onAppear {
-            taskManager.loadTasks(for: selectedDate)
-        }
-        .onDisappear {
-            taskManager.saveTasks(for: selectedDate)
         }
     }
-
-    private func toggleTaskCompletion(_ task: Task) {
-        if let index = taskManager.tasksForWeek[selectedDate]?.firstIndex(where: { $0.id == task.id }) {
-            taskManager.tasksForWeek[selectedDate]?[index].isCompleted.toggle()
-            taskManager.saveTasks(for: selectedDate)
+    
+    private func deleteTask(at offsets: IndexSet) {
+        offsets.forEach { index in
+            taskManager.tasks[index].isCompleted = true
         }
+        taskManager.removeCompletedTasks()
     }
 }
